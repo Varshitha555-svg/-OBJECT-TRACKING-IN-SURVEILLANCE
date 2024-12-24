@@ -1,0 +1,134 @@
+import cv2
+import numpy as np
+import math
+
+# Initialize video capture
+input_video_path = "C:/Users/ASUS/Downloads/jupyter projects/Car Road Transportation.mp4"
+output_video_path = "output.avi"
+
+cap = cv2.VideoCapture(input_video_path)
+if not cap.isOpened():
+    print("Error: Unable to open video file.")
+    exit()
+
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = int(cap.get(cv2.CAP_PROP_FPS))
+
+# Initialize video writer
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
+
+# Load YOLO model
+model_cfg = "C:/Users/ASUS/Downloads/jupyter projects/yolov4.cfg"
+model_weights = "C:/Users/ASUS/Downloads/jupyter projects/yolov4.weights"
+labels_path = "C:/Users/ASUS/Downloads/jupyter projects/coco.names.txt"
+
+net = cv2.dnn.readNetFromDarknet(model_cfg, model_weights)
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
+with open(labels_path, "r") as f:
+    labels = f.read().strip().split("\n")
+
+# Parameters for detection
+conf_threshold = 0.6
+nms_threshold = 0.3
+blob_size = (320, 320)
+
+# Object tracking variables
+tracked_objects = {}
+object_id = 0
+
+# Function to calculate Euclidean distance
+def euclidean_distance(p1, p2):
+    return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+
+# Function to perform object detection
+def detect_objects(frame):
+    blob = cv2.dnn.blobFromImage(frame, scalefactor=1 / 255.0, size=blob_size, swapRB=True, crop=False)
+    net.setInput(blob)
+    layer_names = net.getUnconnectedOutLayersNames()
+    layer_outputs = net.forward(layer_names)
+
+    boxes = []
+    confidences = []
+    class_ids = []
+
+    for output in layer_outputs:
+        for detection in output:
+            scores = detection[5:]
+            class_id = np.argmax(scores)
+            confidence = scores[class_id]
+
+            if confidence > conf_threshold:
+                box = detection[0:4] * np.array([frame_width, frame_height, frame_width, frame_height])
+                (center_x, center_y, width, height) = box.astype("int")
+
+                x = int(center_x - (width / 2))
+                y = int(center_y - (height / 2))
+
+                boxes.append([x, y, int(width), int(height)])
+                confidences.append(float(confidence))
+                class_ids.append(class_id)
+
+    indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
+    filtered_boxes = []
+    filtered_class_ids = []
+    filtered_confidences = []
+
+    if len(indices) > 0:
+        for i in indices.flatten():
+            filtered_boxes.append(boxes[i])
+            filtered_class_ids.append(class_ids[i])
+            filtered_confidences.append(confidences[i])
+
+    return filtered_boxes, filtered_class_ids, filtered_confidences
+
+# Main loop
+frame_count = 0
+frame_skip = 5
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frame_count += 1
+    if frame_count % frame_skip != 0:
+        continue
+
+    boxes, class_ids, confidences = detect_objects(frame)
+
+    for box, class_id, confidence in zip(boxes, class_ids, confidences):
+        (x, y, w, h) = box
+        center_x, center_y = x + w // 2, y + h // 2
+
+        # Tracking logic
+        min_distance = float("inf")
+        matched_id = None
+
+        for obj_id, (prev_x, prev_y) in tracked_objects.items():
+            distance = euclidean_distance((center_x, center_y), (prev_x, prev_y))
+            if distance < min_distance and distance < 50:
+                min_distance = distance
+                matched_id = obj_id
+
+        if matched_id is None:
+            object_id += 1
+            matched_id = object_id
+
+        tracked_objects[matched_id] = (center_x, center_y)
+
+        # Draw bounding box and label
+        label = f"{labels[class_id]} {matched_id} ({confidence:.2f})"
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+    # Write processed frame
+    output_video.write(frame)
+    print(f"Processed frame {frame_count}")
+
+cap.release()
+output_video.release()
+print("Processing complete. Output saved as output.avi")

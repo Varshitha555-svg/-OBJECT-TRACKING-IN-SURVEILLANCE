@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 # Initialize video capture
-input_video_path = "C:/Users/ASUS/Downloads/jupyter projects/Car Road Transportation.mp4"
+input_video_path = "C:/Users/varsh/Downloads/00abd8a7-ecd6fc56.mov"
 output_video_path = "output.avi"
 
 cap = cv2.VideoCapture(input_video_path)
@@ -20,9 +20,9 @@ fourcc = cv2.VideoWriter_fourcc(*'XVID')
 output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
 
 # Load YOLO model
-model_cfg = "C:/Users/ASUS/Downloads/jupyter projects/yolov4.cfg"
-model_weights = "C:/Users/ASUS/Downloads/jupyter projects/yolov4.weights"
-labels_path = "C:/Users/ASUS/Downloads/jupyter projects/coco.names.txt"
+model_cfg = "C:/Users/varsh/Desktop/video_processing_project/yolov4.cfg"
+model_weights = "C:/Users/varsh/Desktop/video_processing_project/yolov4.weights"
+labels_path = "C:/Users/varsh/Desktop/video_processing_project/coco.names.txt"
 
 net = cv2.dnn.readNetFromDarknet(model_cfg, model_weights)
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)

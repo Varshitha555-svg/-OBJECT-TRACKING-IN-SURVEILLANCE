@@ -1,3 +1,4 @@
+
 !pip install imageai --upgrade
 
 from imageai.Detection import VideoObjectDetection
@@ -38,7 +39,7 @@ video_detector = VideoObjectDetection()
 video_detector.setModelTypeAsTinyYOLOv3()
 
 # Path to the model file
-model_path = os.path.join(execution_path, "models/tiny-yolov3.pt")
+model_path = os.path.join(execution_path, "C:/Users/varsh/Desktop/video_processing_project/tiny-yolov3.pt")
 if not os.path.exists(model_path):
     print("Model file not found. Please download tiny-yolov3.pt and place it in the 'models' directory.")
 else:
@@ -46,7 +47,7 @@ else:
     video_detector.loadModel()
 
     # Path to input video
-    input_video_path = os.path.join(execution_path, "C:/Users/ASUS/Downloads/videoplayback.mp4")
+    input_video_path = os.path.join(execution_path, "C:/Users/varsh/Downloads/00abd8a7-ecd6fc56.mov")
     if not os.path.exists(input_video_path):
         print(f"Input video file not found at {input_video_path}. Please provide a valid video file.")
     else:

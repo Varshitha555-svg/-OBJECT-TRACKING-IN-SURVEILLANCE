@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the video
-cap = cv2.VideoCapture("C:/Users/ASUS/Downloads/marathon.mp4")
+cap = cv2.VideoCapture("C:/Users/varsh/Downloads/00abd8a7-ecd6fc56.mov")
 
 # Get video properties
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Load the video
-video_path = "C:/Users/ASUS/Downloads/jupyter projects/Busy Traffic street.mp4"
+video_path = "C:/Users/varsh/Downloads/00abd8a7-ecd6fc56.mov"
 cap = cv2.VideoCapture(video_path)
 
 # Check if the video opened successfully
